@@ -5,6 +5,7 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import GlobalStyleProvider from "./providers/GlobalStyleProvider";
 import ContextProvider from "./providers/ContextProvider";
 import { ClerkProvider, auth } from "@clerk/nextjs";
+import NextTopLoader from "nextjs-toploader";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,7 +20,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const {userId} = auth();
+  const { userId } = auth();
   return (
     <ClerkProvider>
       <html lang="en">
@@ -33,6 +34,11 @@ export default function RootLayout({
           />
         </head>
         <body className={inter.className}>
+          <NextTopLoader
+            height={2}
+            color="#27AE60"
+            easing="cubic-bezier(0.53,0.21,0,1)"
+          />
           <ContextProvider>
             <GlobalStyleProvider>
               {userId && <Sidebar />}

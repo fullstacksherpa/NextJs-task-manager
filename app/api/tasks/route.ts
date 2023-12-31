@@ -1,41 +1,43 @@
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs";
 import prisma from "@/app/utils/connect";
+import { auth } from "@clerk/nextjs";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
     const { userId } = auth();
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized", status: 401 });
     }
-    const { title, description, date, status, isCompleted, isImportant } =
-      await req.json();
+
+    const { title, description, date, completed, important } = await req.json();
+
     if (!title || !description || !date) {
       return NextResponse.json({
-        error: "missing required fields",
+        error: "Missing required fields",
         status: 400,
       });
     }
 
     if (title.length < 3) {
       return NextResponse.json({
-        error: "title must be at least 3 characters long",
+        error: "Title must be at least 3 characters long",
         status: 400,
       });
     }
+
     const task = await prisma.task.create({
       data: {
         title,
         description,
         date,
-        isCompleted,
-        isImportant,
+        isCompleted: completed,
+        isImportant: important,
         userId,
       },
     });
-    console.log(task)
+
     return NextResponse.json(task);
-    
   } catch (error) {
     console.log("ERROR CREATING TASK: ", error);
     return NextResponse.json({ error: "Error creating task", status: 500 });
@@ -44,37 +46,46 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const {userId} = auth();
+    const { userId } = auth();
 
-    if (!userId){
-      return NextResponse.json({error:"Unauthorized", status: 401})
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized", status: 401 });
     }
 
     const tasks = await prisma.task.findMany({
       where: {
         userId,
-      }
-    })
-console.log("tasks: ", tasks)
-    return NextResponse.json(tasks)
+      },
+    });
+
+    return NextResponse.json(tasks);
   } catch (error) {
-    console.log("ERROR GETTING TASK: ", error);
-    return NextResponse.json({ error: "Error getting task", status: 500 });
+    console.log("ERROR GETTING TASKS: ", error);
+    return NextResponse.json({ error: "Error updating task", status: 500 });
   }
 }
 
 export async function PUT(req: Request) {
   try {
-  } catch (error) {
-    console.log("ERROR updating TASK: ", error);
-    return NextResponse.json({ error: "Error updating task", status: 500 });
-  }
-}
+    const { userId } = auth();
+    const { isCompleted, id } = await req.json();
 
-export async function DELETE(req: Request) {
-  try {
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized", status: 401 });
+    }
+
+    const task = await prisma.task.update({
+      where: {
+        id,
+      },
+      data: {
+        isCompleted,
+      },
+    });
+
+    return NextResponse.json(task);
   } catch (error) {
-    console.log("ERROR DELETING TASK: ", error);
+    console.log("ERROR UPDATING TASK: ", error);
     return NextResponse.json({ error: "Error deleting task", status: 500 });
   }
 }
